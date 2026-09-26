@@ -7,8 +7,6 @@ export default function SybilGateway({ onVerified }: { onVerified: () => void })
 
   const startVerification = async () => {
     setStatus('verifying');
-    
-    // Simulating the delay for UX
     await new Promise(resolve => setTimeout(resolve, 800));
 
     try {
@@ -26,26 +24,22 @@ export default function SybilGateway({ onVerified }: { onVerified: () => void })
       } else {
         setStatus('failed');
       }
-    } catch (error) {
+    } catch {
       setStatus('failed');
     }
   };
 
   return (
-    <div className="w-full max-w-sm bg-white border border-zinc-200 rounded-lg shadow-sm p-6">
-      <div className="mb-6">
+    <div className="w-full max-w-sm bg-white border border-zinc-200 rounded-lg shadow-sm p-4 sm:p-6 mx-auto">
+      <div className="mb-4 sm:mb-6">
         <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">Security Check</h2>
         <p className="text-sm text-zinc-500 mt-1">Please verify your session to continue.</p>
       </div>
 
-      <div className="flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-md gap-4">
         <div className="flex items-center gap-3">
-          {status === 'idle' && (
-            <div className="w-5 h-5 rounded border-2 border-zinc-300"></div>
-          )}
-          {status === 'verifying' && (
-            <div className="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin"></div>
-          )}
+          {status === 'idle' && <div className="w-5 h-5 rounded border-2 border-zinc-300"></div>}
+          {status === 'verifying' && <div className="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin"></div>}
           {status === 'success' && (
             <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center">
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -68,14 +62,14 @@ export default function SybilGateway({ onVerified }: { onVerified: () => void })
         {status === 'idle' && (
           <button 
             onClick={startVerification}
-            className="text-xs font-medium text-zinc-900 bg-white border border-zinc-200 hover:bg-zinc-50 px-3 py-1.5 rounded transition-colors shadow-sm"
+            className="w-full sm:w-auto text-xs font-medium text-zinc-900 bg-white border border-zinc-200 hover:bg-zinc-50 px-3 py-1.5 rounded transition-colors shadow-sm"
           >
             Start
           </button>
         )}
       </div>
       
-      <div className="mt-4 text-[10px] text-zinc-400 text-right uppercase tracking-wider font-semibold">
+      <div className="mt-4 text-[10px] text-zinc-400 text-center sm:text-right uppercase tracking-wider font-semibold">
         Protected by Project Turing
       </div>
     </div>
