@@ -6,13 +6,21 @@ import { useRouter } from 'next/navigation';
 export default function AdminLogs() {
   const router = useRouter();
 
+  // Generate real-time timestamps so the demo always looks like it's happening RIGHT NOW
+  const now = new Date();
+  const formatTime = (minutesAgo: number) => {
+    const d = new Date(now.getTime() - minutesAgo * 60000);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+  const todayStr = now.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
   const logs = [
-    { id: 'LOG-991', time: '10:42 AM', user: 'Khizr (Admin)', action: 'System Login', ip: '192.168.1.42', status: 'Success' },
-    { id: 'LOG-990', time: '10:40 AM', user: 'Sarah (Employee)', action: 'Requested Escalation for REQ-842', ip: '10.0.0.15', status: 'Success' },
-    { id: 'LOG-989', time: '10:35 AM', user: 'Nadeem (Dept Head)', action: 'Created New Credentials for Employee', ip: '10.0.0.21', status: 'Success' },
-    { id: 'LOG-988', time: '10:31 AM', user: 'Unknown', action: 'Failed 2FA Attempt', ip: '45.22.19.11', status: 'Blocked' },
-    { id: 'LOG-987', time: '09:15 AM', user: 'Shritan (Employee)', action: 'System Logout', ip: '192.168.1.18', status: 'Success' },
-    { id: 'LOG-986', time: '09:00 AM', user: 'Khizr (Admin)', action: 'Rotated API Keys', ip: '192.168.1.42', status: 'Success' },
+    { id: 'LOG-991', time: `${todayStr}, ${formatTime(2)}`, user: 'Khizr (Admin)', action: 'System Login', ip: '192.168.1.42', status: 'Success' },
+    { id: 'LOG-990', time: `${todayStr}, ${formatTime(8)}`, user: 'Sarah (Employee)', action: 'Requested Escalation for REQ-842', ip: '10.0.0.15', status: 'Success' },
+    { id: 'LOG-989', time: `${todayStr}, ${formatTime(15)}`, user: 'Nadeem (Dept Head)', action: 'Created New Credentials for Employee', ip: '10.0.0.21', status: 'Success' },
+    { id: 'LOG-988', time: `${todayStr}, ${formatTime(42)}`, user: 'Unknown', action: 'Failed 2FA Attempt', ip: '45.22.19.11', status: 'Blocked' },
+    { id: 'LOG-987', time: `${todayStr}, ${formatTime(120)}`, user: 'Shritan (Employee)', action: 'System Logout', ip: '192.168.1.18', status: 'Success' },
+    { id: 'LOG-986', time: `${todayStr}, ${formatTime(145)}`, user: 'Khizr (Admin)', action: 'Rotated API Keys', ip: '192.168.1.42', status: 'Success' },
   ];
 
   return (
