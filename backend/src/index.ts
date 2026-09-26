@@ -25,6 +25,17 @@ app.get('/api/cases', (req: Request, res: Response) => {
   res.json(casesDatabase);
 });
 
+// Helper to save DB (Production persistence mock)
+const saveToDb = (id: string, newStatus: string) => {
+  const datasetPath = path.join(__dirname, 'dataset.json');
+  const casesDatabase = JSON.parse(fs.readFileSync(datasetPath, 'utf-8'));
+  const caseIndex = casesDatabase.findIndex((c: any) => c.id === id);
+  if (caseIndex !== -1) {
+    casesDatabase[caseIndex].status = newStatus;
+    fs.writeFileSync(datasetPath, JSON.stringify(casesDatabase, null, 2));
+  }
+};
+
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'Online', service: 'Project Turing Backend' });
@@ -78,12 +89,19 @@ app.post('/api/evaluate', (req: Request, res: Response) => {
     }
 
     // Approve thoughtful inputs
+    saveToDb(contextId, 'Approved');
     return res.json({
       status: 'success',
       aiDecision: 'Reversed',
       explanation: `Overturned: Valid context provided. User clarified: "${arg.substring(0, 40)}..."`
     });
   }, 1500);
+});
+
+app.post('/api/confirm', (req: Request, res: Response) => {
+  const { contextId } = req.body;
+  saveToDb(contextId, 'Confirmed');
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {

@@ -16,6 +16,16 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
     if (accessibilityMode) observeElement('ai-status-node', 'System update.');
   }, [accessibilityMode, status, observeElement]);
 
+  const handleConfirm = async () => {
+    setStatus('confirmed');
+    if (accessibilityMode) speak("AI decision manually confirmed by human reviewer.");
+    await fetch('http://localhost:5000/api/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextId: caseData.id })
+    });
+  };
+
   const handleContestSubmit = async () => {
     if (!argument.trim()) return;
     setStatus('evaluating');

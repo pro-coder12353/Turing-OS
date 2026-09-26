@@ -10,17 +10,20 @@ export default function Dashboard() {
   const [isVerified, setIsVerified] = useState(false);
   const [selectedCase, setSelectedCase] = useState<any | null>(null);
   const [cases, setCases] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const router = useRouter();
 
   // Fetch actual data from backend
   useEffect(() => {
     if (isVerified) {
+      // Re-fetch on verified or when selectedCase is cleared (to refresh table)
       fetch('http://localhost:5000/api/cases')
         .then(res => res.json())
         .then(data => setCases(data))
         .catch(err => console.error("Database offline", err));
     }
-  }, [isVerified]);
+  }, [isVerified, selectedCase]); // <--- Dependency on selectedCase so it refetches when closed!
 
   if (!isVerified) {
     return (
@@ -37,6 +40,16 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  const filteredCases = cases.filter(c => {
+    const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = !query || 
+      c.id.toLowerCase().includes(query) || 
+      c.applicant.toLowerCase().includes(query) || 
+      c.type.toLowerCase().includes(query);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans">
@@ -59,9 +72,33 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900">Decisions Queue</h2>
-          <p className="text-sm text-zinc-500 mt-1">Review and contest automated system judgments.</p>
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900">Decisions Queue</h2>
+            <p className="text-sm text-zinc-500 mt-1">Review and contest automated system judgments.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="text"
+              placeholder="Search ID, name, or type..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="text-sm border border-zinc-200 bg-white text-zinc-700 py-1.5 px-3 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-zinc-900 min-w-[200px] sm:min-w-[250px]"
+            />
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="text-sm border border-zinc-200 bg-white text-zinc-700 py-1.5 px-3 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-zinc-900"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Denied">Denied</option>
+              <option value="Flagged">Flagged</option>
+              <option value="Shadowbanned">Shadowbanned</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Confirmed">Confirmed</option>
+            </select>
+          </div>
         </div>
         
         <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-x-auto">
@@ -76,10 +113,10 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {cases.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-zinc-400">Loading Postgres Database...</td></tr>
+              {filteredCases.length === 0 ? (
+                <tr><td colSpan={5} className="p-6 text-center text-zinc-400">No cases match this filter.</td></tr>
               ) : (
-                cases.map((c) => (
+                filteredCases.map((c) => (
                   <tr key={c.id} onClick={() => setSelectedCase(c)} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
                     <td className="px-4 sm:px-6 py-4 font-mono text-xs text-zinc-500">{c.id}</td>
                     <td className="px-4 sm:px-6 py-4">
@@ -94,6 +131,7 @@ export default function Dashboard() {
                       <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${
                         c.status === 'Denied' ? 'bg-red-50 text-red-700 ring-red-600/10' :
                         c.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/10' :
+                        c.status === 'Confirmed' ? 'bg-zinc-100 text-zinc-700 ring-zinc-500/20' :
                         'bg-amber-50 text-amber-700 ring-amber-600/10'
                       }`}>
                         {c.status}
