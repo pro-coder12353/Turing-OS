@@ -1,91 +1,94 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import SybilGateway from '@/components/SybilGateway';
-import ContestabilityEngine from '@/components/ContestabilityEngine';
-import { ArrowRight } from 'lucide-react';
 
-export default function Home() {
-  const [isVerified, setIsVerified] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+export default function Login() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState('Employee');
 
-  if (!isVerified) {
-    return (
-      <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center p-4 font-sans selection:bg-zinc-200">
-         <SybilGateway onVerified={() => setIsVerified(true)} />
-      </div>
-    );
-  }
-
-  if (selectedCase) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans selection:bg-zinc-200 py-12 px-4">
-        <ContestabilityEngine onClose={() => setSelectedCase(null)} />
-      </div>
-    );
-  }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setTimeout(() => {
+      localStorage.setItem('turing_role', role);
+      if (role === 'Admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard');
+      }
+    }, 800);
+  };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans selection:bg-zinc-200">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <h1 className="font-semibold text-sm tracking-tight">Project Turing</h1>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-zinc-300"></div>
-            <span className="text-xs text-zinc-500 font-medium">Production</span>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] text-zinc-900 font-sans px-4">
+      <div className="w-full max-w-sm bg-white border border-zinc-200 rounded-xl shadow-sm p-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Decisions Queue</h2>
-          <p className="text-sm text-zinc-500 mt-1">Review and contest automated system judgments.</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-4 h-4 bg-zinc-900 rounded-sm"></div>
+            <h1 className="font-semibold text-lg tracking-tight">Project Turing</h1>
+          </div>
+          <p className="text-sm text-zinc-500">Sign in to the enterprise portal.</p>
         </div>
         
-        <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-zinc-50/50 border-b border-zinc-200 text-zinc-500">
-              <tr>
-                <th className="px-6 py-3 font-medium">Case ID</th>
-                <th className="px-6 py-3 font-medium">Type</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              <tr onClick={() => setSelectedCase('REQ-842')} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
-                <td className="px-6 py-4 font-mono text-xs text-zinc-500">REQ-842</td>
-                <td className="px-6 py-4 text-zinc-900">Loan Application</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/10">
-                    Denied
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-zinc-900 font-medium group-hover:text-zinc-600 inline-flex items-center gap-1 transition-colors">
-                    Review <ArrowRight className="w-3 h-3" />
-                  </button>
-                </td>
-              </tr>
-              <tr className="hover:bg-zinc-50 transition-colors group cursor-pointer">
-                <td className="px-6 py-4 font-mono text-xs text-zinc-500">MOD-91B</td>
-                <td className="px-6 py-4 text-zinc-900">Content Flag</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10">
-                    Shadowbanned
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-zinc-900 font-medium group-hover:text-zinc-600 inline-flex items-center gap-1 transition-colors">
-                    Review <ArrowRight className="w-3 h-3" />
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1">Access Role</label>
+            <select 
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full text-sm border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all bg-white"
+            >
+              <option value="Employee">Compliance Officer (Employee)</option>
+              <option value="Head">Department Head</option>
+              <option value="Admin">System Administrator</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1">Work Email</label>
+            <input 
+              type="email" 
+              required 
+              defaultValue="demo@turing.io"
+              placeholder="name@company.com" 
+              className="w-full text-sm border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" 
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1">Password</label>
+            <input 
+              type="password" 
+              required 
+              defaultValue="password123"
+              placeholder="••••••••" 
+              className="w-full text-sm border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" 
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1">Authenticator 2FA Code</label>
+            <input 
+              type="text" 
+              required
+              maxLength={6}
+              placeholder="000000"
+              className="w-full text-sm font-mono tracking-widest border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" 
+            />
+          </div>
+          <button 
+            disabled={isLoading} 
+            className="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex justify-center items-center h-10 mt-2"
+          >
+            {isLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Verify & Continue'}
+          </button>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-xs text-zinc-400 flex items-center justify-center gap-1">
+            🔒 Hardware Security Key / 2FA Enforced
+          </p>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,40 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 
+import fs from 'fs';
+import path from 'path';
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// ==========================================
+// REAL DATA ENDPOINT (Table Population)
+// ==========================================
+app.get('/api/cases', (req: Request, res: Response) => {
+  // Read dynamically so it updates immediately without a server restart
+  const datasetPath = path.join(__dirname, 'dataset.json');
+  const rawData = fs.readFileSync(datasetPath, 'utf-8');
+  const casesDatabase = JSON.parse(rawData);
+
+  // In production, this would query Postgres: 
+  // const result = await pool.query('SELECT * FROM ai_decisions');
+  res.json(casesDatabase);
+});
+
+// Helper to save DB (Production persistence mock)
+const saveToDb = (id: string, newStatus: string) => {
+  const datasetPath = path.join(__dirname, 'dataset.json');
+  const casesDatabase = JSON.parse(fs.readFileSync(datasetPath, 'utf-8'));
+  const caseIndex = casesDatabase.findIndex((c: any) => c.id === id);
+  if (caseIndex !== -1) {
+    casesDatabase[caseIndex].status = newStatus;
+    fs.writeFileSync(datasetPath, JSON.stringify(casesDatabase, null, 2));
+  }
+};
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
@@ -44,20 +72,48 @@ app.post('/api/evaluate', (req: Request, res: Response) => {
   
   console.log(`[CONTESTABILITY] Processing user argument for case ${contextId}: "${userArgument}"`);
 
-  // Mocking the AI re-evaluation logic
-  // In reality, Shritan will plug the OpenAI/Anthropic API here
+  // In a real production environment, this is where you call the OpenAI/Gemini API:
+  // const aiResponse = await openai.chat.completions.create({ ... })
   
+  const arg = userArgument?.toLowerCase().trim() || "";
+
+  // Smart Mock AI Evaluation
   setTimeout(() => {
-    res.json({
+    // Reject garbage inputs or very short strings
+    if (arg.length < 15 || arg.includes('sus') || arg.includes('test')) {
+      return res.json({
+        status: 'rejected',
+        aiDecision: 'Maintained',
+        explanation: 'Appeal rejected: The provided counter-evidence was insufficient, irrelevant, or lacked verifiable details.'
+      });
+    }
+
+    // Approve thoughtful inputs
+    saveToDb(contextId, 'Approved');
+    return res.json({
       status: 'success',
       aiDecision: 'Reversed',
-      newConfidenceScore: 0.89,
-      reasoningGraph: [
-        { node: 'Income Verification', status: 'Approved', note: 'User provided valid context.' },
-        { node: 'Risk Assessment', status: 'Adjusted', note: 'Risk lowered based on counter-argument.' }
-      ]
+      explanation: `Overturned: Valid context provided. User clarified: "${arg.substring(0, 40)}..."`
     });
-  }, 2000); // simulate AI processing delay
+  }, 1500);
+});
+
+app.post('/api/confirm', (req: Request, res: Response) => {
+  const { contextId } = req.body;
+  saveToDb(contextId, 'Confirmed');
+  res.json({ success: true });
+});
+
+app.post('/api/escalate', (req: Request, res: Response) => {
+  const { contextId } = req.body;
+  saveToDb(contextId, 'Pending Escalation');
+  res.json({ success: true });
+});
+
+app.post('/api/override', (req: Request, res: Response) => {
+  const { contextId } = req.body;
+  saveToDb(contextId, 'Approved (Manual)');
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {
