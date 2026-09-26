@@ -104,9 +104,9 @@ app.post('/api/confirm', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-app.post('/api/override', (req: Request, res: Response) => {
+app.post('/api/escalate', (req: Request, res: Response) => {
   const { contextId } = req.body;
-  saveToDb(contextId, 'Approved (Manual)');
+  saveToDb(contextId, 'Pending Escalation');
   res.json({ success: true });
 });
 

@@ -6,12 +6,17 @@ import { useState } from 'react';
 export default function Login() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState('Employee');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      router.push('/dashboard');
+      if (role === 'Admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard');
+      }
     }, 800);
   };
 
@@ -28,10 +33,23 @@ export default function Login() {
         
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1">Access Role</label>
+            <select 
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full text-sm border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all bg-white"
+            >
+              <option value="Employee">Compliance Officer (Employee)</option>
+              <option value="Head">Department Head</option>
+              <option value="Admin">System Administrator</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-xs font-medium text-zinc-700 mb-1">Work Email</label>
             <input 
               type="email" 
               required 
+              defaultValue="demo@turing.io"
               placeholder="name@company.com" 
               className="w-full text-sm border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" 
             />
@@ -41,20 +59,33 @@ export default function Login() {
             <input 
               type="password" 
               required 
+              defaultValue="password123"
               placeholder="••••••••" 
               className="w-full text-sm border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" 
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700 mb-1">Authenticator 2FA Code</label>
+            <input 
+              type="text" 
+              required
+              maxLength={6}
+              placeholder="000000"
+              className="w-full text-sm font-mono tracking-widest border border-zinc-300 rounded-md p-2.5 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all" 
             />
           </div>
           <button 
             disabled={isLoading} 
             className="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium py-2.5 rounded-md transition-colors flex justify-center items-center h-10 mt-2"
           >
-            {isLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Continue'}
+            {isLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Verify & Continue'}
           </button>
         </form>
         
         <div className="mt-6 text-center">
-          <p className="text-xs text-zinc-400">Secure SSO enabled</p>
+          <p className="text-xs text-zinc-400 flex items-center justify-center gap-1">
+            🔒 Hardware Security Key / 2FA Enforced
+          </p>
         </div>
       </div>
     </div>

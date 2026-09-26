@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX, AlertCir
 import { useMutationAudio } from '@/hooks/useMutationAudio';
 
 export default function ContestabilityEngine({ caseData, onClose }: { caseData: any, onClose: () => void }) {
-  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'overridden'>('viewing');
+  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'escalated'>('viewing');
   const [argument, setArgument] = useState('');
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [evalResult, setEvalResult] = useState<{ decision: string, explanation: string } | null>(null);
@@ -26,10 +26,10 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
     });
   };
 
-  const handleOverride = async () => {
-    setStatus('overridden');
-    if (accessibilityMode) speak("AI decision manually overridden. Approval forced.");
-    await fetch('http://localhost:5000/api/override', {
+  const handleEscalate = async () => {
+    setStatus('escalated');
+    if (accessibilityMode) speak("Application escalated to Department Head.");
+    await fetch('http://localhost:5000/api/escalate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contextId: caseData.id })
@@ -96,8 +96,8 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
               <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">Approved</span>
             ) : status === 'confirmed' ? (
               <span className="px-2.5 py-1 bg-zinc-100 text-zinc-700 text-xs font-semibold rounded-md border border-zinc-200">Confirmed</span>
-            ) : status === 'overridden' ? (
-              <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md border border-blue-200">Force Approved</span>
+            ) : status === 'escalated' ? (
+              <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs font-semibold rounded-md border border-orange-200">Pending Escalation</span>
             ) : (
               <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${
                 caseData.status === 'Flagged' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'
@@ -124,17 +124,17 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
             status === 'resolved' 
               ? (evalResult?.decision === 'Reversed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-red-200 bg-red-50/30') 
               : status === 'confirmed' ? 'border-zinc-200 bg-zinc-50'
-              : status === 'overridden' ? 'border-blue-200 bg-blue-50/30'
+              : status === 'escalated' ? 'border-orange-200 bg-orange-50/30'
               : (caseData.status === 'Flagged' ? 'border-amber-200 bg-amber-50/30' : 'border-red-200 bg-red-50/30')
           }`}>
             {status === 'resolved' && evalResult?.decision === 'Reversed' ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-            ) : (caseData.status === 'Flagged' && status !== 'resolved' && status !== 'confirmed' && status !== 'overridden') ? (
+            ) : (caseData.status === 'Flagged' && status !== 'resolved' && status !== 'confirmed' && status !== 'escalated') ? (
               <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
             ) : status === 'confirmed' ? (
               <CheckCircle2 className="w-5 h-5 text-zinc-400 mt-0.5 flex-shrink-0" />
-            ) : status === 'overridden' ? (
-              <CheckCircle2 className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            ) : status === 'escalated' ? (
+              <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
             ) : (
               <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
             )}
@@ -156,10 +156,10 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                           Confirm AI
                         </button>
                         <button 
-                          onClick={handleOverride}
-                          className="flex-1 sm:flex-none text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded border border-blue-200 shadow-sm"
+                          onClick={handleEscalate}
+                          className="flex-1 sm:flex-none text-xs font-semibold text-orange-700 hover:text-orange-800 bg-orange-50 px-3 py-1.5 rounded border border-orange-200 shadow-sm"
                         >
-                          Force Approve
+                          Escalate to Head
                         </button>
                       </>
                     )}
@@ -187,9 +187,9 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                   <p className="text-xs font-medium text-zinc-600 bg-zinc-100/50 p-2 rounded border border-zinc-200 inline-block mt-1">
                     ✓ Decision formally endorsed and locked by human reviewer.
                   </p>
-                ) : status === 'overridden' ? (
-                  <p className="text-xs font-medium text-blue-700 bg-blue-50 p-2 rounded border border-blue-200 inline-block mt-1">
-                    ⚠ AI decision bypassed. Application manually force-approved by Compliance Officer.
+                ) : status === 'escalated' ? (
+                  <p className="text-xs font-medium text-orange-700 bg-orange-50 p-2 rounded border border-orange-200 inline-block mt-1">
+                    ⏳ Employee lacked permission. Application escalated to Department Head for review.
                   </p>
                 ) : status === 'viewing' ? (
                   <p className={`text-xs break-words ${caseData.status === 'Flagged' ? 'text-amber-700' : 'text-red-600'}`}>

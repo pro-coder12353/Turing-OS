@@ -6,7 +6,7 @@
     "purpose": "First-time home buyer (Primary Residence)",
     "date": "Oct 24, 2026",
     "type": "Mortgage Loan",
-    "status": "Denied",
+    "status": "Pending Escalation",
     "ai_confidence": 92,
     "risk_score": 85,
     "reason": "Application address matches high-risk commercial zone instead of residential."
