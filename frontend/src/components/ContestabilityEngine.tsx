@@ -5,7 +5,12 @@ import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX, AlertCir
 import { useMutationAudio } from '@/hooks/useMutationAudio';
 
 export default function ContestabilityEngine({ caseData, onClose }: { caseData: any, onClose: () => void }) {
-  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'escalated' | 'overridden'>('viewing');
+  const initialStatus = 
+    caseData.status === 'Pending Escalation' ? 'escalated' : 
+    caseData.status === 'Confirmed' ? 'confirmed' : 
+    caseData.status === 'Approved (Manual)' ? 'overridden' : 'viewing';
+
+  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'escalated' | 'overridden'>(initialStatus);
   const [argument, setArgument] = useState('');
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [evalResult, setEvalResult] = useState<{ decision: string, explanation: string } | null>(null);
