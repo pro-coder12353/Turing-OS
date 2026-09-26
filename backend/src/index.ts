@@ -11,15 +11,15 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Load real data
-const datasetPath = path.join(__dirname, 'dataset.json');
-const rawData = fs.readFileSync(datasetPath, 'utf-8');
-const casesDatabase = JSON.parse(rawData);
-
 // ==========================================
 // REAL DATA ENDPOINT (Table Population)
 // ==========================================
 app.get('/api/cases', (req: Request, res: Response) => {
+  // Read dynamically so it updates immediately without a server restart
+  const datasetPath = path.join(__dirname, 'dataset.json');
+  const rawData = fs.readFileSync(datasetPath, 'utf-8');
+  const casesDatabase = JSON.parse(rawData);
+
   // In production, this would query Postgres: 
   // const result = await pool.query('SELECT * FROM ai_decisions');
   res.json(casesDatabase);
