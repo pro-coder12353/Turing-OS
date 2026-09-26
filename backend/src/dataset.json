@@ -1,0 +1,42 @@
+[
+  {
+    "id": "REQ-842",
+    "type": "Mortgage Loan",
+    "status": "Denied",
+    "ai_confidence": 92,
+    "risk_score": 85,
+    "reason": "Application address matches high-risk commercial zone instead of residential."
+  },
+  {
+    "id": "REQ-901",
+    "type": "Auto Loan",
+    "status": "Flagged",
+    "ai_confidence": 88,
+    "risk_score": 65,
+    "reason": "Employment history gap detected in provided W-2 data."
+  },
+  {
+    "id": "REQ-112",
+    "type": "Personal Credit",
+    "status": "Shadowbanned",
+    "ai_confidence": 99,
+    "risk_score": 98,
+    "reason": "Synthetic identity patterns matched against global threat network."
+  },
+  {
+    "id": "REQ-445",
+    "type": "Small Business",
+    "status": "Denied",
+    "ai_confidence": 76,
+    "risk_score": 72,
+    "reason": "Revenue projections fall below algorithmic safety threshold for sector."
+  },
+  {
+    "id": "REQ-229",
+    "type": "Mortgage Loan",
+    "status": "Flagged",
+    "ai_confidence": 81,
+    "risk_score": 58,
+    "reason": "Debt-to-income ratio fluctuates abnormally in cross-referenced accounts."
+  }
+]

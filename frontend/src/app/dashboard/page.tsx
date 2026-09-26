@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SybilGateway from '@/components/SybilGateway';
 import ContestabilityEngine from '@/components/ContestabilityEngine';
 import { ArrowRight, LogOut } from 'lucide-react';
@@ -9,7 +9,18 @@ import { useRouter } from 'next/navigation';
 export default function Dashboard() {
   const [isVerified, setIsVerified] = useState(false);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [cases, setCases] = useState<any[]>([]);
   const router = useRouter();
+
+  // Fetch actual data from backend
+  useEffect(() => {
+    if (isVerified) {
+      fetch('http://localhost:5000/api/cases')
+        .then(res => res.json())
+        .then(data => setCases(data))
+        .catch(err => console.error("Database offline", err));
+    }
+  }, [isVerified]);
 
   if (!isVerified) {
     return (
@@ -64,34 +75,30 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              <tr onClick={() => setSelectedCase('REQ-842')} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
-                <td className="px-4 sm:px-6 py-4 font-mono text-xs text-zinc-500">REQ-842</td>
-                <td className="px-4 sm:px-6 py-4 text-zinc-900">Loan Application</td>
-                <td className="px-4 sm:px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/10">
-                    Denied
-                  </span>
-                </td>
-                <td className="px-4 sm:px-6 py-4 text-right">
-                  <button className="text-zinc-900 font-medium group-hover:text-zinc-600 inline-flex items-center gap-1 transition-colors">
-                    Review <ArrowRight className="w-3 h-3" />
-                  </button>
-                </td>
-              </tr>
-              <tr className="hover:bg-zinc-50 transition-colors group cursor-pointer">
-                <td className="px-4 sm:px-6 py-4 font-mono text-xs text-zinc-500">MOD-91B</td>
-                <td className="px-4 sm:px-6 py-4 text-zinc-900">Content Flag</td>
-                <td className="px-4 sm:px-6 py-4">
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10">
-                    Shadowbanned
-                  </span>
-                </td>
-                <td className="px-4 sm:px-6 py-4 text-right">
-                  <button className="text-zinc-900 font-medium group-hover:text-zinc-600 inline-flex items-center gap-1 transition-colors">
-                    Review <ArrowRight className="w-3 h-3" />
-                  </button>
-                </td>
-              </tr>
+              {cases.length === 0 ? (
+                <tr><td colSpan={4} className="p-6 text-center text-zinc-400">Loading Postgres Database...</td></tr>
+              ) : (
+                cases.map((c) => (
+                  <tr key={c.id} onClick={() => setSelectedCase(c.id)} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
+                    <td className="px-4 sm:px-6 py-4 font-mono text-xs text-zinc-500">{c.id}</td>
+                    <td className="px-4 sm:px-6 py-4 text-zinc-900">{c.type}</td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${
+                        c.status === 'Denied' ? 'bg-red-50 text-red-700 ring-red-600/10' :
+                        c.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/10' :
+                        'bg-amber-50 text-amber-700 ring-amber-600/10'
+                      }`}>
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <button className="text-zinc-900 font-medium group-hover:text-zinc-600 inline-flex items-center gap-1 transition-colors">
+                        Review <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
