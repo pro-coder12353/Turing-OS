@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const [isVerified, setIsVerified] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [selectedCase, setSelectedCase] = useState<any | null>(null);
   const [cases, setCases] = useState<any[]>([]);
   const router = useRouter();
 
@@ -33,7 +33,7 @@ export default function Dashboard() {
   if (selectedCase) {
     return (
       <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans py-6 px-4 sm:py-12">
-        <ContestabilityEngine onClose={() => setSelectedCase(null)} />
+        <ContestabilityEngine caseData={selectedCase} onClose={() => setSelectedCase(null)} />
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900">Decisions Queue</h2>
           <p className="text-sm text-zinc-500 mt-1">Review and contest automated system judgments.</p>
@@ -69,19 +69,27 @@ export default function Dashboard() {
             <thead className="bg-zinc-50/50 border-b border-zinc-200 text-zinc-500">
               <tr>
                 <th className="px-4 sm:px-6 py-3 font-medium">Case ID</th>
-                <th className="px-4 sm:px-6 py-3 font-medium">Type</th>
+                <th className="px-4 sm:px-6 py-3 font-medium">Applicant</th>
+                <th className="px-4 sm:px-6 py-3 font-medium">Request Details</th>
                 <th className="px-4 sm:px-6 py-3 font-medium">Status</th>
                 <th className="px-4 sm:px-6 py-3 font-medium text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {cases.length === 0 ? (
-                <tr><td colSpan={4} className="p-6 text-center text-zinc-400">Loading Postgres Database...</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-zinc-400">Loading Postgres Database...</td></tr>
               ) : (
                 cases.map((c) => (
-                  <tr key={c.id} onClick={() => setSelectedCase(c.id)} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
+                  <tr key={c.id} onClick={() => setSelectedCase(c)} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
                     <td className="px-4 sm:px-6 py-4 font-mono text-xs text-zinc-500">{c.id}</td>
-                    <td className="px-4 sm:px-6 py-4 text-zinc-900">{c.type}</td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="font-medium text-zinc-900">{c.applicant}</div>
+                      <div className="text-xs text-zinc-500 mt-0.5">{c.date}</div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="font-medium text-zinc-900">{c.amount} - <span className="font-normal text-zinc-500">{c.type}</span></div>
+                      <div className="text-xs text-zinc-500 mt-0.5 truncate max-w-xs" title={c.purpose}>{c.purpose}</div>
+                    </td>
                     <td className="px-4 sm:px-6 py-4">
                       <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ring-1 ring-inset ${
                         c.status === 'Denied' ? 'bg-red-50 text-red-700 ring-red-600/10' :

@@ -1,6 +1,10 @@
 [
   {
     "id": "REQ-842",
+    "applicant": "Michael Chen",
+    "amount": "$450,000",
+    "purpose": "First-time home buyer (Primary Residence)",
+    "date": "Oct 24, 2026",
     "type": "Mortgage Loan",
     "status": "Denied",
     "ai_confidence": 92,
@@ -9,6 +13,10 @@
   },
   {
     "id": "REQ-901",
+    "applicant": "Sarah Jenkins",
+    "amount": "$35,000",
+    "purpose": "Electric Vehicle Financing",
+    "date": "Oct 24, 2026",
     "type": "Auto Loan",
     "status": "Flagged",
     "ai_confidence": 88,
@@ -17,6 +25,10 @@
   },
   {
     "id": "REQ-112",
+    "applicant": "David Rodriguez (Flagged Alias)",
+    "amount": "$15,000",
+    "purpose": "Unsecured Credit Line",
+    "date": "Oct 23, 2026",
     "type": "Personal Credit",
     "status": "Shadowbanned",
     "ai_confidence": 99,
@@ -25,6 +37,10 @@
   },
   {
     "id": "REQ-445",
+    "applicant": "Apex Dynamics LLC",
+    "amount": "$120,000",
+    "purpose": "Equipment Expansion",
+    "date": "Oct 22, 2026",
     "type": "Small Business",
     "status": "Denied",
     "ai_confidence": 76,
@@ -33,6 +49,10 @@
   },
   {
     "id": "REQ-229",
+    "applicant": "Emily Watson",
+    "amount": "$550,000",
+    "purpose": "Refinance (Secondary Home)",
+    "date": "Oct 21, 2026",
     "type": "Mortgage Loan",
     "status": "Flagged",
     "ai_confidence": 81,

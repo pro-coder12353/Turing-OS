@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX, AlertCircle } from 'lucide-react';
 import { useMutationAudio } from '@/hooks/useMutationAudio';
 
-export default function ContestabilityEngine({ onClose }: { onClose: () => void }) {
+export default function ContestabilityEngine({ caseData, onClose }: { caseData: any, onClose: () => void }) {
   const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved'>('viewing');
   const [argument, setArgument] = useState('');
   const [accessibilityMode, setAccessibilityMode] = useState(false);
@@ -25,7 +25,7 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
       const res = await fetch('http://localhost:5000/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userArgument: argument, contextId: 'REQ-842' })
+        body: JSON.stringify({ userArgument: argument, contextId: caseData.id })
       });
       
       const data = await res.json();
@@ -54,8 +54,8 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">Case REQ-842</h2>
-            <p className="text-xs text-zinc-500 font-mono mt-0.5">Automated Loan Denial</p>
+            <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">Case {caseData.id} - {caseData.applicant}</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">{caseData.type} | {caseData.amount}</p>
           </div>
         </div>
         
@@ -71,11 +71,15 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
           </button>
           <div className="hidden sm:block h-6 w-px bg-zinc-200"></div>
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline text-sm text-zinc-500 font-medium">Decision:</span>
+            <span className="hidden sm:inline text-sm text-zinc-500 font-medium">Final Decision:</span>
             {evalResult?.decision === 'Reversed' ? (
               <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">Approved</span>
             ) : (
-              <span className="px-2.5 py-1 bg-red-50 text-red-700 text-xs font-semibold rounded-md border border-red-200">Denied</span>
+              <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${
+                caseData.status === 'Flagged' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'
+              }`}>
+                {caseData.status}
+              </span>
             )}
           </div>
         </div>
@@ -95,13 +99,19 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
           <div className={`flex items-start gap-4 p-4 border rounded-lg transition-colors ${
             status === 'resolved' 
               ? (evalResult?.decision === 'Reversed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-red-200 bg-red-50/30') 
-              : 'border-red-200 bg-red-50/30'
+              : (caseData.status === 'Flagged' ? 'border-amber-200 bg-amber-50/30' : 'border-red-200 bg-red-50/30')
           }`}>
-            {status === 'resolved' && evalResult?.decision === 'Reversed' ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" /> : <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />}
+            {status === 'resolved' && evalResult?.decision === 'Reversed' ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+            ) : (caseData.status === 'Flagged' && status !== 'resolved') ? (
+              <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            ) : (
+              <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            )}
             
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                <p className="text-sm font-medium text-zinc-900">Geographic Risk Assessment</p>
+                <p className="text-sm font-medium text-zinc-900">Algorithmic Risk Assessment</p>
                 {(status === 'viewing' || status === 'resolved') && (
                   <button 
                     onClick={() => {
@@ -123,7 +133,9 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
                     {evalResult.explanation}
                   </p>
                 ) : status === 'viewing' ? (
-                  <p className="text-xs text-red-600 break-words">Failed: Application address matches high-risk commercial zone instead of residential.</p>
+                  <p className={`text-xs break-words ${caseData.status === 'Flagged' ? 'text-amber-700' : 'text-red-600'}`}>
+                    {caseData.status === 'Flagged' ? 'Warning' : 'Failed'}: {caseData.reason}
+                  </p>
                 ) : null}
               </div>
               
