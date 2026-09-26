@@ -2,15 +2,25 @@
 
 import { useState } from 'react';
 import SybilGateway from '@/components/SybilGateway';
+import ContestabilityEngine from '@/components/ContestabilityEngine';
 import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
   const [isVerified, setIsVerified] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<string | null>(null);
 
   if (!isVerified) {
     return (
       <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center p-4 font-sans selection:bg-zinc-200">
          <SybilGateway onVerified={() => setIsVerified(true)} />
+      </div>
+    );
+  }
+
+  if (selectedCase) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans selection:bg-zinc-200 py-12 px-4">
+        <ContestabilityEngine onClose={() => setSelectedCase(null)} />
       </div>
     );
   }
@@ -44,7 +54,7 @@ export default function Home() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              <tr className="hover:bg-zinc-50 transition-colors group cursor-pointer">
+              <tr onClick={() => setSelectedCase('REQ-842')} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
                 <td className="px-6 py-4 font-mono text-xs text-zinc-500">REQ-842</td>
                 <td className="px-6 py-4 text-zinc-900">Loan Application</td>
                 <td className="px-6 py-4">
