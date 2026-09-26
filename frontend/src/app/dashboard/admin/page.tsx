@@ -20,7 +20,6 @@ export default function AdminLogs() {
     { id: 'LOG-989', time: `${todayStr}, ${formatTime(15)}`, user: 'Nadeem (Dept Head)', action: 'Created New Credentials for Employee', ip: '10.0.0.21', status: 'Success' },
     { id: 'LOG-988', time: `${todayStr}, ${formatTime(42)}`, user: 'Unknown', action: 'Failed 2FA Attempt', ip: '45.22.19.11', status: 'Blocked' },
     { id: 'LOG-987', time: `${todayStr}, ${formatTime(120)}`, user: 'Shritan (Employee)', action: 'System Logout', ip: '192.168.1.18', status: 'Success' },
-    { id: 'LOG-986', time: `${todayStr}, ${formatTime(145)}`, user: 'Khizr (Admin)', action: 'Rotated API Keys', ip: '192.168.1.42', status: 'Success' },
   ];
 
   return (
