@@ -1,18 +1,32 @@
 "use client";
 
-import React, { useState } from 'react';
-import { CheckCircle2, XCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+import { useMutationAudio } from '@/hooks/useMutationAudio';
 
 export default function ContestabilityEngine({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved'>('viewing');
   const [argument, setArgument] = useState('');
+  const [accessibilityMode, setAccessibilityMode] = useState(false);
   
+  // Initialize our custom accessibility engine
+  const { speak, observeElement } = useMutationAudio(accessibilityMode);
+
+  // Watch the status node for silent DOM changes
+  useEffect(() => {
+    if (accessibilityMode) {
+      observeElement('ai-status-node', 'System update.');
+    }
+  }, [accessibilityMode, status, observeElement]);
+
   const handleContestSubmit = async () => {
     if (!argument.trim()) return;
     setStatus('evaluating');
     
+    // Explicitly narrate the action for the blind user
+    if (accessibilityMode) speak('Submitting counter evidence to AI Court.');
+    
     try {
-      // Shritan's AI Backend Route
       await fetch('http://localhost:5000/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,7 +35,16 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
       setStatus('resolved');
     } catch (error) {
       console.error(error);
-      setStatus('resolved'); // Fallback for demo
+      setStatus('resolved');
+    }
+  };
+
+  const toggleA11y = () => {
+    const newState = !accessibilityMode;
+    setAccessibilityMode(newState);
+    if (newState && window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance("Accessibility DOM observation engine activated.");
+      window.speechSynthesis.speak(u);
     }
   };
 
@@ -40,7 +63,22 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={toggleA11y}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ${
+              accessibilityMode 
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'
+            }`}
+            title="Toggle DOM-Mutation Audio Engine"
+          >
+            {accessibilityMode ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            A11y Engine
+          </button>
+
+          <div className="h-6 w-px bg-zinc-200"></div>
+
           <span className="text-sm text-zinc-500 font-medium">Final Decision:</span>
           {status === 'resolved' ? (
             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">Overturned / Approved</span>
@@ -76,19 +114,25 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
                 <p className="text-sm font-medium text-zinc-900">Geographic Risk Assessment</p>
                 {status === 'viewing' && (
                   <button 
-                    onClick={() => setStatus('contesting')}
-                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded"
+                    onClick={() => {
+                      setStatus('contesting');
+                      if (accessibilityMode) speak("Contest mode activated. Enter counter evidence.");
+                    }}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded border border-indigo-100"
                   >
                     Contest Node
                   </button>
                 )}
               </div>
               
-              {status === 'resolved' ? (
-                <p className="text-xs text-emerald-700 mt-1 font-medium">Overturned: User provided valid context regarding temporary zip code mismatch.</p>
-              ) : (
-                <p className="text-xs text-red-600 mt-1">Failed: Application address matches high-risk commercial zone instead of residential.</p>
-              )}
+              {/* This is the silent DOM mutation we want to track */}
+              <div id="ai-status-node">
+                {status === 'resolved' ? (
+                  <p className="text-xs text-emerald-700 mt-1 font-medium">Overturned: User provided valid context regarding temporary zip code mismatch.</p>
+                ) : (
+                  <p className="text-xs text-red-600 mt-1">Failed: Application address matches high-risk commercial zone instead of residential.</p>
+                )}
+              </div>
               
               {/* Contest Input Box */}
               {status === 'contesting' && (
@@ -102,7 +146,10 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
                     rows={3}
                   />
                   <div className="mt-3 flex justify-end gap-2">
-                    <button onClick={() => setStatus('viewing')} className="text-xs font-medium text-zinc-600 px-3 py-1.5 hover:bg-zinc-100 rounded">Cancel</button>
+                    <button onClick={() => {
+                      setStatus('viewing');
+                      if (accessibilityMode) speak("Contest cancelled.");
+                    }} className="text-xs font-medium text-zinc-600 px-3 py-1.5 hover:bg-zinc-100 rounded">Cancel</button>
                     <button onClick={handleContestSubmit} className="text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 px-3 py-1.5 rounded shadow-sm">Submit to AI Court</button>
                   </div>
                 </div>
