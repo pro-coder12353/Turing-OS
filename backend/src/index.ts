@@ -104,6 +104,12 @@ app.post('/api/confirm', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+app.post('/api/override', (req: Request, res: Response) => {
+  const { contextId } = req.body;
+  saveToDb(contextId, 'Approved (Manual)');
+  res.json({ success: true });
+});
+
 app.listen(PORT, () => {
   console.log(`[SERVER] Backend is running on http://localhost:${PORT}`);
   console.log(`[SERVER] Sybil Defense API available at http://localhost:${PORT}/api/verify`);

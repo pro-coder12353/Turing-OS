@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX, AlertCir
 import { useMutationAudio } from '@/hooks/useMutationAudio';
 
 export default function ContestabilityEngine({ caseData, onClose }: { caseData: any, onClose: () => void }) {
-  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed'>('viewing');
+  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'overridden'>('viewing');
   const [argument, setArgument] = useState('');
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [evalResult, setEvalResult] = useState<{ decision: string, explanation: string } | null>(null);
@@ -20,6 +20,16 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
     setStatus('confirmed');
     if (accessibilityMode) speak("AI decision manually confirmed by human reviewer.");
     await fetch('http://localhost:5000/api/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextId: caseData.id })
+    });
+  };
+
+  const handleOverride = async () => {
+    setStatus('overridden');
+    if (accessibilityMode) speak("AI decision manually overridden. Approval forced.");
+    await fetch('http://localhost:5000/api/override', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contextId: caseData.id })
@@ -86,6 +96,8 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
               <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">Approved</span>
             ) : status === 'confirmed' ? (
               <span className="px-2.5 py-1 bg-zinc-100 text-zinc-700 text-xs font-semibold rounded-md border border-zinc-200">Confirmed</span>
+            ) : status === 'overridden' ? (
+              <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md border border-blue-200">Force Approved</span>
             ) : (
               <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${
                 caseData.status === 'Flagged' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'
@@ -112,14 +124,17 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
             status === 'resolved' 
               ? (evalResult?.decision === 'Reversed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-red-200 bg-red-50/30') 
               : status === 'confirmed' ? 'border-zinc-200 bg-zinc-50'
+              : status === 'overridden' ? 'border-blue-200 bg-blue-50/30'
               : (caseData.status === 'Flagged' ? 'border-amber-200 bg-amber-50/30' : 'border-red-200 bg-red-50/30')
           }`}>
             {status === 'resolved' && evalResult?.decision === 'Reversed' ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-            ) : (caseData.status === 'Flagged' && status !== 'resolved' && status !== 'confirmed') ? (
+            ) : (caseData.status === 'Flagged' && status !== 'resolved' && status !== 'confirmed' && status !== 'overridden') ? (
               <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
             ) : status === 'confirmed' ? (
               <CheckCircle2 className="w-5 h-5 text-zinc-400 mt-0.5 flex-shrink-0" />
+            ) : status === 'overridden' ? (
+              <CheckCircle2 className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
             ) : (
               <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
             )}
@@ -128,17 +143,25 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                 <p className="text-sm font-medium text-zinc-900">Algorithmic Risk Assessment</p>
                 {(status === 'viewing' || status === 'resolved') && (
-                  <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                  <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
                     {status === 'viewing' && (
-                      <button 
-                        onClick={() => {
-                          setStatus('confirmed');
-                          if (accessibilityMode) speak("AI decision manually confirmed by human reviewer.");
-                        }}
-                        className="flex-1 sm:flex-none text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white px-3 py-1.5 rounded border border-zinc-200 shadow-sm"
-                      >
-                        Confirm AI
-                      </button>
+                      <>
+                        <button 
+                          onClick={() => {
+                            setStatus('confirmed');
+                            if (accessibilityMode) speak("AI decision manually confirmed by human reviewer.");
+                          }}
+                          className="flex-1 sm:flex-none text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white px-3 py-1.5 rounded border border-zinc-200 shadow-sm"
+                        >
+                          Confirm AI
+                        </button>
+                        <button 
+                          onClick={handleOverride}
+                          className="flex-1 sm:flex-none text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded border border-blue-200 shadow-sm"
+                        >
+                          Force Approve
+                        </button>
+                      </>
                     )}
                     <button 
                       onClick={() => {
@@ -147,7 +170,7 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                         setEvalResult(null);
                         if (accessibilityMode) speak("Contest mode activated. Enter counter evidence.");
                       }}
-                      className="flex-1 sm:flex-none text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded border border-indigo-100"
+                      className="w-full sm:w-auto text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded border border-indigo-100"
                     >
                       Contest Node
                     </button>
@@ -163,6 +186,10 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                 ) : status === 'confirmed' ? (
                   <p className="text-xs font-medium text-zinc-600 bg-zinc-100/50 p-2 rounded border border-zinc-200 inline-block mt-1">
                     ✓ Decision formally endorsed and locked by human reviewer.
+                  </p>
+                ) : status === 'overridden' ? (
+                  <p className="text-xs font-medium text-blue-700 bg-blue-50 p-2 rounded border border-blue-200 inline-block mt-1">
+                    ⚠ AI decision bypassed. Application manually force-approved by Compliance Officer.
                   </p>
                 ) : status === 'viewing' ? (
                   <p className={`text-xs break-words ${caseData.status === 'Flagged' ? 'text-amber-700' : 'text-red-600'}`}>
