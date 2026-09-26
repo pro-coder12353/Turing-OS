@@ -61,20 +61,29 @@ app.post('/api/evaluate', (req: Request, res: Response) => {
   
   console.log(`[CONTESTABILITY] Processing user argument for case ${contextId}: "${userArgument}"`);
 
-  // Mocking the AI re-evaluation logic
-  // In reality, Shritan will plug the OpenAI/Anthropic API here
+  // In a real production environment, this is where you call the OpenAI/Gemini API:
+  // const aiResponse = await openai.chat.completions.create({ ... })
   
+  const arg = userArgument?.toLowerCase().trim() || "";
+
+  // Smart Mock AI Evaluation
   setTimeout(() => {
-    res.json({
+    // Reject garbage inputs or very short strings
+    if (arg.length < 15 || arg.includes('sus') || arg.includes('test')) {
+      return res.json({
+        status: 'rejected',
+        aiDecision: 'Maintained',
+        explanation: 'Appeal rejected: The provided counter-evidence was insufficient, irrelevant, or lacked verifiable details.'
+      });
+    }
+
+    // Approve thoughtful inputs
+    return res.json({
       status: 'success',
       aiDecision: 'Reversed',
-      newConfidenceScore: 0.89,
-      reasoningGraph: [
-        { node: 'Income Verification', status: 'Approved', note: 'User provided valid context.' },
-        { node: 'Risk Assessment', status: 'Adjusted', note: 'Risk lowered based on counter-argument.' }
-      ]
+      explanation: `Overturned: Valid context provided. User clarified: "${arg.substring(0, 40)}..."`
     });
-  }, 2000); // simulate AI processing delay
+  }, 1500);
 });
 
 app.listen(PORT, () => {

@@ -8,6 +8,8 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
   const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved'>('viewing');
   const [argument, setArgument] = useState('');
   const [accessibilityMode, setAccessibilityMode] = useState(false);
+  const [evalResult, setEvalResult] = useState<{ decision: string, explanation: string } | null>(null);
+  
   const { speak, observeElement } = useMutationAudio(accessibilityMode);
 
   useEffect(() => {
@@ -20,13 +22,18 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
     if (accessibilityMode) speak('Submitting counter evidence to AI Court.');
     
     try {
-      await fetch('http://localhost:5000/api/evaluate', {
+      const res = await fetch('http://localhost:5000/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userArgument: argument, contextId: 'REQ-842' })
       });
+      
+      const data = await res.json();
+      setEvalResult({ decision: data.aiDecision, explanation: data.explanation });
       setStatus('resolved');
+      
     } catch {
+      setEvalResult({ decision: 'Maintained', explanation: 'Error connecting to AI verification server.' });
       setStatus('resolved');
     }
   };
@@ -65,7 +72,7 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
           <div className="hidden sm:block h-6 w-px bg-zinc-200"></div>
           <div className="flex items-center gap-2">
             <span className="hidden sm:inline text-sm text-zinc-500 font-medium">Decision:</span>
-            {status === 'resolved' ? (
+            {evalResult?.decision === 'Reversed' ? (
               <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">Approved</span>
             ) : (
               <span className="px-2.5 py-1 bg-red-50 text-red-700 text-xs font-semibold rounded-md border border-red-200">Denied</span>
@@ -85,15 +92,22 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
             </div>
           </div>
 
-          <div className={`flex items-start gap-4 p-4 border rounded-lg transition-colors ${status === 'resolved' ? 'border-emerald-200 bg-emerald-50/30' : 'border-red-200 bg-red-50/30'}`}>
-            {status === 'resolved' ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" /> : <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />}
+          <div className={`flex items-start gap-4 p-4 border rounded-lg transition-colors ${
+            status === 'resolved' 
+              ? (evalResult?.decision === 'Reversed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-red-200 bg-red-50/30') 
+              : 'border-red-200 bg-red-50/30'
+          }`}>
+            {status === 'resolved' && evalResult?.decision === 'Reversed' ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" /> : <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />}
+            
             <div className="flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                 <p className="text-sm font-medium text-zinc-900">Geographic Risk Assessment</p>
-                {status === 'viewing' && (
+                {(status === 'viewing' || status === 'resolved') && (
                   <button 
                     onClick={() => {
                       setStatus('contesting');
+                      setArgument('');
+                      setEvalResult(null);
                       if (accessibilityMode) speak("Contest mode activated. Enter counter evidence.");
                     }}
                     className="w-full sm:w-auto text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1.5 rounded border border-indigo-100"
@@ -104,11 +118,13 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
               </div>
               
               <div id="ai-status-node" className="mt-2">
-                {status === 'resolved' ? (
-                  <p className="text-xs text-emerald-700 font-medium break-words">Overturned: User provided valid context regarding temporary zip code mismatch.</p>
-                ) : (
+                {status === 'resolved' && evalResult ? (
+                  <p className={`text-xs font-medium break-words ${evalResult.decision === 'Reversed' ? 'text-emerald-700' : 'text-red-700'}`}>
+                    {evalResult.explanation}
+                  </p>
+                ) : status === 'viewing' ? (
                   <p className="text-xs text-red-600 break-words">Failed: Application address matches high-risk commercial zone instead of residential.</p>
-                )}
+                ) : null}
               </div>
               
               {status === 'contesting' && (
@@ -117,7 +133,7 @@ export default function ContestabilityEngine({ onClose }: { onClose: () => void 
                   <textarea 
                     value={argument}
                     onChange={(e) => setArgument(e.target.value)}
-                    placeholder="Enter evidence..."
+                    placeholder="Enter verifiable evidence..."
                     className="w-full text-sm border border-zinc-300 rounded-md p-2 focus:ring-1 focus:ring-indigo-500 outline-none resize-y min-h-[80px]"
                   />
                   <div className="mt-3 flex flex-col sm:flex-row justify-end gap-2">
