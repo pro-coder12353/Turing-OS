@@ -190,12 +190,21 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                         >
                           Confirm AI
                         </button>
-                        <button 
-                          onClick={handleEscalate}
-                          className="flex-1 sm:flex-none text-xs font-semibold text-orange-700 hover:text-orange-800 bg-orange-50 px-3 py-1.5 rounded border border-orange-200 shadow-sm"
-                        >
-                          Escalate to Head
-                        </button>
+                        {userRole === 'Head' ? (
+                          <button 
+                            onClick={handleHeadApprove}
+                            className="flex-1 sm:flex-none text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded border border-blue-200 shadow-sm"
+                          >
+                            Force Approve
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={handleEscalate}
+                            className="flex-1 sm:flex-none text-xs font-semibold text-orange-700 hover:text-orange-800 bg-orange-50 px-3 py-1.5 rounded border border-orange-200 shadow-sm"
+                          >
+                            Escalate to Head
+                          </button>
+                        )}
                       </>
                     )}
                     <button 

@@ -6,7 +6,7 @@
     "purpose": "First-time home buyer (Primary Residence)",
     "date": "Oct 24, 2026",
     "type": "Mortgage Loan",
-    "status": "Pending Escalation",
+    "status": "Approved (Manual)",
     "ai_confidence": 92,
     "risk_score": 85,
     "reason": "Application address matches high-risk commercial zone instead of residential."
@@ -30,7 +30,7 @@
     "purpose": "Unsecured Credit Line",
     "date": "Oct 3, 2026",
     "type": "Small Business",
-    "status": "Shadowbanned",
+    "status": "Confirmed",
     "ai_confidence": 78,
     "risk_score": 63,
     "reason": "Revenue projections fall below algorithmic safety threshold for sector."
