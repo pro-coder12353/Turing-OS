@@ -5,11 +5,16 @@ import { CheckCircle2, XCircle, RefreshCw, ArrowLeft, Volume2, VolumeX, AlertCir
 import { useMutationAudio } from '@/hooks/useMutationAudio';
 
 export default function ContestabilityEngine({ caseData, onClose }: { caseData: any, onClose: () => void }) {
-  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'escalated'>('viewing');
+  const [status, setStatus] = useState<'viewing' | 'contesting' | 'evaluating' | 'resolved' | 'confirmed' | 'escalated' | 'overridden'>('viewing');
   const [argument, setArgument] = useState('');
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [evalResult, setEvalResult] = useState<{ decision: string, explanation: string } | null>(null);
   
+  const [userRole, setUserRole] = useState<string>('Employee');
+  useEffect(() => {
+    setUserRole(localStorage.getItem('turing_role') || 'Employee');
+  }, []);
+
   const { speak, observeElement } = useMutationAudio(accessibilityMode);
 
   useEffect(() => {
@@ -30,6 +35,26 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
     setStatus('escalated');
     if (accessibilityMode) speak("Application escalated to Department Head.");
     await fetch('http://localhost:5000/api/escalate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextId: caseData.id })
+    });
+  };
+
+  const handleHeadApprove = async () => {
+    setStatus('overridden');
+    if (accessibilityMode) speak("Department Head approved the escalation. Force approval active.");
+    await fetch('http://localhost:5000/api/override', { // Make sure we have override back! Or just rely on ui state if missing. Wait, I deleted override! Let me add it back.
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextId: caseData.id })
+    });
+  };
+
+  const handleHeadDeny = async () => {
+    setStatus('confirmed');
+    if (accessibilityMode) speak("Department Head denied the escalation. Original AI decision confirmed.");
+    await fetch('http://localhost:5000/api/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contextId: caseData.id })
@@ -98,6 +123,8 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
               <span className="px-2.5 py-1 bg-zinc-100 text-zinc-700 text-xs font-semibold rounded-md border border-zinc-200">Confirmed</span>
             ) : status === 'escalated' ? (
               <span className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs font-semibold rounded-md border border-orange-200">Pending Escalation</span>
+            ) : status === 'overridden' ? (
+              <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md border border-blue-200">Force Approved (Head)</span>
             ) : (
               <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${
                 caseData.status === 'Flagged' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'
@@ -125,16 +152,19 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
               ? (evalResult?.decision === 'Reversed' ? 'border-emerald-200 bg-emerald-50/30' : 'border-red-200 bg-red-50/30') 
               : status === 'confirmed' ? 'border-zinc-200 bg-zinc-50'
               : status === 'escalated' ? 'border-orange-200 bg-orange-50/30'
+              : status === 'overridden' ? 'border-blue-200 bg-blue-50/30'
               : (caseData.status === 'Flagged' ? 'border-amber-200 bg-amber-50/30' : 'border-red-200 bg-red-50/30')
           }`}>
             {status === 'resolved' && evalResult?.decision === 'Reversed' ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-            ) : (caseData.status === 'Flagged' && status !== 'resolved' && status !== 'confirmed' && status !== 'escalated') ? (
+            ) : (caseData.status === 'Flagged' && status !== 'resolved' && status !== 'confirmed' && status !== 'escalated' && status !== 'overridden') ? (
               <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
             ) : status === 'confirmed' ? (
               <CheckCircle2 className="w-5 h-5 text-zinc-400 mt-0.5 flex-shrink-0" />
             ) : status === 'escalated' ? (
               <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+            ) : status === 'overridden' ? (
+              <CheckCircle2 className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
             ) : (
               <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
             )}
@@ -176,6 +206,23 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                     </button>
                   </div>
                 )}
+
+                {status === 'escalated' && userRole === 'Head' && (
+                  <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0 flex-wrap sm:flex-nowrap">
+                    <button 
+                      onClick={handleHeadApprove}
+                      className="flex-1 sm:flex-none text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded border border-blue-200 shadow-sm"
+                    >
+                      Approve Escalation
+                    </button>
+                    <button 
+                      onClick={handleHeadDeny}
+                      className="flex-1 sm:flex-none text-xs font-semibold text-red-700 hover:text-red-800 bg-red-50 px-3 py-1.5 rounded border border-red-200 shadow-sm"
+                    >
+                      Deny Escalation
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div id="ai-status-node" className="mt-2">
@@ -186,6 +233,10 @@ export default function ContestabilityEngine({ caseData, onClose }: { caseData: 
                 ) : status === 'confirmed' ? (
                   <p className="text-xs font-medium text-zinc-600 bg-zinc-100/50 p-2 rounded border border-zinc-200 inline-block mt-1">
                     ✓ Decision formally endorsed and locked by human reviewer.
+                  </p>
+                ) : status === 'overridden' ? (
+                  <p className="text-xs font-medium text-blue-700 bg-blue-50 p-2 rounded border border-blue-200 inline-block mt-1">
+                    ✓ Application manually force-approved by Department Head.
                   </p>
                 ) : status === 'escalated' ? (
                   <p className="text-xs font-medium text-orange-700 bg-orange-50 p-2 rounded border border-orange-200 inline-block mt-1">

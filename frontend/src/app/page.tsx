@@ -12,6 +12,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
+      localStorage.setItem('turing_role', role);
       if (role === 'Admin') {
         router.push('/dashboard/admin');
       } else {

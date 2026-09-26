@@ -12,10 +12,12 @@ export default function Dashboard() {
   const [cases, setCases] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('Employee');
   const router = useRouter();
 
   // Fetch actual data from backend
   useEffect(() => {
+    setUserRole(localStorage.getItem('turing_role') || 'Employee');
     if (isVerified) {
       // Re-fetch on verified or when selectedCase is cleared (to refresh table)
       fetch('http://localhost:5000/api/cases')
@@ -61,10 +63,12 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-zinc-300"></div>
-              <span className="text-xs text-zinc-500 font-medium">Production</span>
+              <span className="text-xs text-zinc-500 font-medium px-2 py-1 bg-zinc-100 rounded">Role: {userRole}</span>
             </div>
-            <button onClick={() => router.push('/')} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+            <button onClick={() => {
+              localStorage.removeItem('turing_role');
+              router.push('/');
+            }} className="text-zinc-400 hover:text-zinc-700 transition-colors">
               <LogOut className="w-4 h-4" />
             </button>
           </div>
